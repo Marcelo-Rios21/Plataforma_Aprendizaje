@@ -1,15 +1,16 @@
 package com.duoc.LearningPlatformValidation.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.duoc.LearningPlatformValidation.exception.RecursoNoEncontradoException;
 import com.duoc.LearningPlatformValidation.model.Evaluacion;
 import com.duoc.LearningPlatformValidation.repository.EvaluacionRepository;
 
 @Service
 public class EvaluacionService {
+
     private final EvaluacionRepository evaluacionRepository;
 
     public EvaluacionService(EvaluacionRepository evaluacionRepository) {
@@ -20,8 +21,9 @@ public class EvaluacionService {
         return evaluacionRepository.findAll();
     }
 
-    public Optional<Evaluacion> buscarEvaluacionPorId(Long id) {
-        return evaluacionRepository.findById(id);
+    public Evaluacion buscarEvaluacionPorId(Long id) {
+        return evaluacionRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Evaluación no encontrada con ID: " + id));
     }
 
     public List<Evaluacion> buscarEvaluacionesPorCurso(Long cursoId) {
@@ -32,21 +34,23 @@ public class EvaluacionService {
         return evaluacionRepository.save(evaluacion);
     }
 
-    public Optional<Evaluacion> actualizarEvaluacion(Long id, Evaluacion evaluacionActualizada) {
-        return evaluacionRepository.findById(id).map(evaluacion -> {
-            evaluacion.setCursoId(evaluacionActualizada.getCursoId());
-            evaluacion.setNombre(evaluacionActualizada.getNombre());
-            evaluacion.setPuntajeMaximo(evaluacionActualizada.getPuntajeMaximo());
-            evaluacion.setFechaAplicacion(evaluacionActualizada.getFechaAplicacion());
-            return evaluacionRepository.save(evaluacion);
-        });
+    public Evaluacion actualizarEvaluacion(Long id, Evaluacion evaluacionActualizada) {
+        Evaluacion evaluacionExistente = evaluacionRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Evaluación no encontrada con ID: " + id));
+
+        evaluacionExistente.setCursoId(evaluacionActualizada.getCursoId());
+        evaluacionExistente.setNombre(evaluacionActualizada.getNombre());
+        evaluacionExistente.setPuntajeMaximo(evaluacionActualizada.getPuntajeMaximo());
+        evaluacionExistente.setFechaAplicacion(evaluacionActualizada.getFechaAplicacion());
+
+        return evaluacionRepository.save(evaluacionExistente);
     }
 
-    public boolean eliminarEvaluacion(Long id) {
-        if (evaluacionRepository.existsById(id)) {
-            evaluacionRepository.deleteById(id);
-            return true;
+    public void eliminarEvaluacion(Long id) {
+        if (!evaluacionRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Evaluación no encontrada con ID: " + id);
         }
-        return false;
+
+        evaluacionRepository.deleteById(id);
     }
 }

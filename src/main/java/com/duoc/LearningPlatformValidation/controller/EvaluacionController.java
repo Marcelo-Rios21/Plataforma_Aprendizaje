@@ -1,5 +1,6 @@
 package com.duoc.LearningPlatformValidation.controller;
 
+import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -14,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.duoc.LearningPlatformValidation.model.Evaluacion;
 import com.duoc.LearningPlatformValidation.service.EvaluacionService;
-
 @RestController
 @RequestMapping("/api/evaluaciones")
 public class EvaluacionController {
+
     private final EvaluacionService evaluacionService;
 
     public EvaluacionController(EvaluacionService evaluacionService) {
@@ -31,9 +32,7 @@ public class EvaluacionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Evaluacion> buscarEvaluacionPorId(@PathVariable Long id) {
-        return evaluacionService.buscarEvaluacionPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(evaluacionService.buscarEvaluacionPorId(id));
     }
 
     @GetMapping("/curso/{cursoId}")
@@ -44,27 +43,23 @@ public class EvaluacionController {
     @PostMapping
     public ResponseEntity<Evaluacion> registrarEvaluacion(@RequestBody Evaluacion evaluacion) {
         Evaluacion nuevaEvaluacion = evaluacionService.registrarEvaluacion(evaluacion);
-        return ResponseEntity.ok(nuevaEvaluacion);
+        URI location = URI.create("/api/evaluaciones/" + nuevaEvaluacion.getId());
+
+        return ResponseEntity.created(location).body(nuevaEvaluacion);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Evaluacion> actualizarEvaluacion(
             @PathVariable Long id,
-            @RequestBody Evaluacion evaluacion
-    ) {
-        return evaluacionService.actualizarEvaluacion(id, evaluacion)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+            @RequestBody Evaluacion evaluacion) {
+
+        Evaluacion evaluacionActualizada = evaluacionService.actualizarEvaluacion(id, evaluacion);
+        return ResponseEntity.ok(evaluacionActualizada);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarEvaluacion(@PathVariable Long id) {
-        boolean eliminado = evaluacionService.eliminarEvaluacion(id);
-
-        if (eliminado) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.notFound().build();
+        evaluacionService.eliminarEvaluacion(id);
+        return ResponseEntity.noContent().build();
     }
 }

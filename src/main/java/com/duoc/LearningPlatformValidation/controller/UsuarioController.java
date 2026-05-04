@@ -1,5 +1,6 @@
 package com.duoc.LearningPlatformValidation.controller;
 
+import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -17,8 +18,8 @@ import com.duoc.LearningPlatformValidation.service.UsuarioService;
 
 @RestController
 @RequestMapping("/api/usuarios")
-
 public class UsuarioController {
+
     private final UsuarioService usuarioService;
 
     public UsuarioController(UsuarioService usuarioService) {
@@ -32,35 +33,29 @@ public class UsuarioController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> buscarUsuarioPorId(@PathVariable Long id) {
-        return usuarioService.buscarUsuarioPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(usuarioService.buscarUsuarioPorId(id));
     }
 
     @PostMapping
     public ResponseEntity<Usuario> registrarUsuario(@RequestBody Usuario usuario) {
         Usuario nuevoUsuario = usuarioService.registrarUsuario(usuario);
-        return ResponseEntity.ok(nuevoUsuario);
+        URI location = URI.create("/api/usuarios/" + nuevoUsuario.getId());
+
+        return ResponseEntity.created(location).body(nuevoUsuario);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> actualizarUsuario(
             @PathVariable Long id,
-            @RequestBody Usuario usuario
-    ) {
-        return usuarioService.actualizarUsuario(id, usuario)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+            @RequestBody Usuario usuario) {
+
+        Usuario usuarioActualizado = usuarioService.actualizarUsuario(id, usuario);
+        return ResponseEntity.ok(usuarioActualizado);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
-        boolean eliminado = usuarioService.eliminarUsuario(id);
-
-        if (eliminado) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.notFound().build();
+        usuarioService.eliminarUsuario(id);
+        return ResponseEntity.noContent().build();
     }
 }

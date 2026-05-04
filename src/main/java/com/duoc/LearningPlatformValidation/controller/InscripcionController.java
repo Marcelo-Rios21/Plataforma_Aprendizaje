@@ -1,5 +1,6 @@
 package com.duoc.LearningPlatformValidation.controller;
 
+import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import com.duoc.LearningPlatformValidation.service.InscripcionService;
 @RestController
 @RequestMapping("/api/inscripciones")
 public class InscripcionController {
+
     private final InscripcionService inscripcionService;
 
     public InscripcionController(InscripcionService inscripcionService) {
@@ -31,9 +33,7 @@ public class InscripcionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Inscripcion> buscarInscripcionPorId(@PathVariable Long id) {
-        return inscripcionService.buscarInscripcionPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(inscripcionService.buscarInscripcionPorId(id));
     }
 
     @GetMapping("/curso/{cursoId}")
@@ -44,27 +44,23 @@ public class InscripcionController {
     @PostMapping
     public ResponseEntity<Inscripcion> registrarInscripcion(@RequestBody Inscripcion inscripcion) {
         Inscripcion nuevaInscripcion = inscripcionService.registrarInscripcion(inscripcion);
-        return ResponseEntity.ok(nuevaInscripcion);
+        URI location = URI.create("/api/inscripciones/" + nuevaInscripcion.getId());
+
+        return ResponseEntity.created(location).body(nuevaInscripcion);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Inscripcion> actualizarInscripcion(
             @PathVariable Long id,
-            @RequestBody Inscripcion inscripcion
-    ) {
-        return inscripcionService.actualizarInscripcion(id, inscripcion)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+            @RequestBody Inscripcion inscripcion) {
+
+        Inscripcion inscripcionActualizada = inscripcionService.actualizarInscripcion(id, inscripcion);
+        return ResponseEntity.ok(inscripcionActualizada);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarInscripcion(@PathVariable Long id) {
-        boolean eliminado = inscripcionService.eliminarInscripcion(id);
-
-        if (eliminado) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.notFound().build();
+        inscripcionService.eliminarInscripcion(id);
+        return ResponseEntity.noContent().build();
     }
 }
