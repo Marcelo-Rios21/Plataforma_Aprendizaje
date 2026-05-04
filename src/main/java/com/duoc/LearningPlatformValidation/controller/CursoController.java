@@ -1,5 +1,6 @@
 package com.duoc.LearningPlatformValidation.controller;
 
+import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import com.duoc.LearningPlatformValidation.service.CursoService;
 @RestController
 @RequestMapping("/api/cursos")
 public class CursoController {
+
     private final CursoService cursoService;
 
     public CursoController(CursoService cursoService) {
@@ -31,35 +33,29 @@ public class CursoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Curso> buscarCursoPorId(@PathVariable Long id) {
-        return cursoService.buscarCursoPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(cursoService.buscarCursoPorId(id));
     }
 
     @PostMapping
     public ResponseEntity<Curso> registrarCurso(@RequestBody Curso curso) {
         Curso nuevoCurso = cursoService.registrarCurso(curso);
-        return ResponseEntity.ok(nuevoCurso);
+        URI location = URI.create("/api/cursos/" + nuevoCurso.getId());
+
+        return ResponseEntity.created(location).body(nuevoCurso);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Curso> actualizarCurso(
             @PathVariable Long id,
-            @RequestBody Curso curso
-    ) {
-        return cursoService.actualizarCurso(id, curso)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+            @RequestBody Curso curso) {
+
+        Curso cursoActualizado = cursoService.actualizarCurso(id, curso);
+        return ResponseEntity.ok(cursoActualizado);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarCurso(@PathVariable Long id) {
-        boolean eliminado = cursoService.eliminarCurso(id);
-
-        if (eliminado) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.notFound().build();
+        cursoService.eliminarCurso(id);
+        return ResponseEntity.noContent().build();
     }
 }
